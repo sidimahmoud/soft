@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8">
     <link rel="stylesheet" href="https://d19vzq90twjlae.cloudfront.net/leaflet-0.7/leaflet.css" />
@@ -159,7 +158,10 @@
 </head>
 
 <body>
-@include('partials.header')
+    <div class="mr-header">
+
+        <img src='images/logo_rim.png' width="115" height="90" class="logo-rim">
+    </div>
     <div id="wrapper">
         
         <div id="header"> Mauritanie geoportail </div>
