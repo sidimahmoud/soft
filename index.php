@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://d19vzq90twjlae.cloudfront.net/leaflet-0.7/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.css"/>
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <!--this is new-->
+
+    <script src="https://d19vzq90twjlae.cloudfront.net/leaflet-0.7.3/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js"></script>
+    <script src='https://api.tiles.mapbox.com/mapbox.js/v1.6.4/mapbox.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <script type="text/javascript" src="dist/leaflet.ajax.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@5/turf.min.js"></script>
+
+    <style type="text/css">
+        #map {
+            width: 600px;
+            height: 400px;
+        }
+        /* This is new */
+        
+        button {
+            width: 100px;
+        }
+        .header-page {
+            height: 60px;
+            background-color: #204060;
+            color: white;
+            padding: 10px;
+        }
+
+        #wrapper {
+            margin: 0 auto;
+            width: 100%;
+        }
+        #contentHolder{
+            position:relative;
+        }
+        #header{
+            background-color: #204060;
+            color: white;
+            height: 30px;
+            width: 100%;
+            clear:both;
+            font-size:1.5em;
+            text-align:center;
+            padding-top:2px;
+        }
+        .leftsidebar {
+            background: #fff;
+            border-color: #CCCCCC #BBBBBB #888888;
+            border-style: solid;
+            border-width: 1px 2px 2px 1px;
+            position: absolute;
+            width: 20%;
+            height: calc(100vh - 40px);
+        }
+        .leftsidebarfixed {
+            position: fixed;
+            top: 0;
+        }
+        .content {
+            position: relative;
+            width: 80%;
+            height: calc(100vh - 70px);
+        }
+        .action-header {
+            margin-top: 5px;
+            width: 100%;
+            background-color: #eee;
+            height: 40px;
+            padding: 10px;
+        }
+        .action-body {
+            width: 100%;
+            height: 40px;
+            padding: 10px;
+        }
+        .action-head {
+            padding: 10px;
+            margin-bottom: 4px;
+            font-size:1.5em;
+        }
+        /* The Modal (background) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1; /* Sit on top */
+            width: 40%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+        }
+
+        /* Modal Content */
+        .modal-content {
+            width: 100%;
+            padding:20px;
+        }
+
+        /* The Close Button */
+        .close {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .mr-header {
+            width: 100%;
+            height: 110px;
+            background-color: #00a753;
+            border-color: #cb3d29;
+            border-style: solid;
+            border-width: 4px 0px 4px 0px;
+            text-align:center;
+        }
+        .logo-rim {
+            padding-top:5px
+        }
+        @import url("https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css");
+        .panel-title > a:before {
+            float: right !important;
+            font-family: FontAwesome;
+            content:"\f068";
+            padding-right: 5px;
+        }
+        .panel-title > a.collapsed:before {
+            float: right !important;
+            content:"\f067";
+        }
+        .panel-title > a:hover, 
+        .panel-title > a:active, 
+        .panel-title > a:focus  {
+            text-decoration:none;
+        }
+        .close-indices {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+@include('partials.header')
+    <div id="wrapper">
+        
+        <div id="header"> Mauritanie geoportail </div>
+        <div id="contentHolder"> 
+            <div class="leftsidebar">
+                <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                    <div class="panel panel-default">
+                        <div class="panel-heading" role="tab" id="headingOne">
+                            <h4 class="panel-title">
+                                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                    Données Geographique
+                                </a>
+                            </h4>
+
+                        </div>
+                    </div>
+                    <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                        <div class="action-body">
+                            <input type="checkbox" id="filter-indices" name="indices" value="Indices" onclick="filterIndices()" checked>  Indices</input>
+                        </div>
+
+                        <div class="action-body">
+                            <input type="checkbox" id="filter-permis" name="permis" value="permis"  onclick="filterPermis()" checked>  Permis</input>
+                        </div>
+                    </div>
+
+
+                    <div class="panel panel-default">
+                        <div class="panel-heading" role="tab" id="headingTwo">
+                            <h4 class="panel-title">
+                                <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                    Données Administratives
+                                </a>
+                            </h4>
+
+                        </div>
+                    </div>
+                    <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+  
+                        <div class="action-body">
+                            <input type="checkbox" id="filter-wilaya" name="wilaya" value="Wilaya" onclick="filterWilaya()" checked>  Wilaya</input>
+                        </div>
+
+                        <div class="action-body">
+                            <input type="checkbox" id="filter-capitales-regionales" name="capitales_regionales" value="Capitales Regionales" onclick="filterCapitalesRegionales()" checked>  Capitales Regionales</input>
+                        </div>
+
+                        <div class="action-body">
+                            <input type="checkbox" id="filter-moughataa" name="moughataa" value="Moughataa" onclick="filterMoughataa()" checked>  Moughataa</input>
+                        </div>
+
+                        <div class="action-body">
+                            <input type="checkbox" id="filter-communes" name="communes" value="communes" onclick="filterCommunes()" checked>  Communes</input>
+                        </div>
+                        
+                        <div class="action-body">
+                            <input type="checkbox" id="filter-routes" name="routes" value="Routes" onclick="filterRoutes()" checked>  Routes</input>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="map" class="content" style="height: calc(100vh - 60px);float: left;margin-left: 20%;position: relative;width: 80%;position: relative;">
+                 <!-- The Modal -->
+                <div id="myModal" class="modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+
+                    <!-- Modal content -->
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <div class="modal-header">
+                            <h4 class="modal-title" id="myModalLabel">Données geographiques dans cette région:</h4> 
+                        </div>
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Count</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Indices</td>
+                                    <td id="tindice"></td>
+                                    <td>
+                                        <button type="button" id="allindices" class="btn btn-info btn-sm" onclick="showIndices()">Details</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                    </div>
+                </div>
+
+                <div id="indicesModal" class="modal">
+
+                    <!-- Modal content -->
+                    <div class="modal-content">
+                        <span class="close-indices">&times;</span>
+                        <div class="modal-header">
+                            <h4 class="modal-title" id="myModalLabel">Noms de tous les indices dans cette région:</h4> 
+                        </div>
+                        <p id="indices-list"></p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+       
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js"></script>
+    <script type="text/javascript">
+        // Get the <span> element that closes the modal
+        
+        var indicesIn = [];
+        var modal = document.getElementById("myModal");
+        var span = document.getElementsByClassName("close")[0];
+        var modalindices = document.getElementById("indicesModal");
+        var closeIndices = document.getElementsByClassName("close-indices")[0];
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        closeIndices.onclick = function() {
+            modalindices.style.display = "none";
+        }
+
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+        var mapboxTiles = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+            attribution: '<a href="http://www.mapbox.com/about/maps/" target="_blank">Terms &amp; Feedback</a>'
+        });
+        var openboxTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        })
+        //possible colors 'red', 'darkred', 'orange', 'green', 'darkgreen', 'blue', 'purple', 'darkpuple', 'cadetblue'
+        var cafeIcon = L.AwesomeMarkers.icon({
+            prefix: 'fa', //font awesome rather than bootstrap
+            markerColor: 'red', // see colors above
+            icon: 'coffee' //http://fortawesome.github.io/Font-Awesome/icons/
+        });
+        
+        var map = L.map('map')
+            .addLayer(mapboxTiles)
+            .addLayer(openboxTiles)
+            .setView([23.6074500,-10.8163400], 5);
+        var editableLayers = new L.FeatureGroup();
+        map.addLayer(editableLayers);
+        var drawControl = new L.Control.Draw({
+            edit: {
+                featureGroup: editableLayers, //REQUIRED!!
+                remove: true,
+                edit: true,
+            },
+            position: 'topright',
+            draw: {
+                polyline: {
+                    allowIntersection: false,
+                    showArea: true
+                },
+                polygon: true,
+                rectangle: true,
+                circle: false,
+                marker: true,
+                delete:	true
+            }
+        });
+        var baseLayers = {
+            "Mapbox": mapboxTiles,
+            "OpenStreetMap": openboxTiles,
+            Topography: L.tileLayer.wms('http://ows.mundialis.de/services/service?', {
+                layers: 'TOPO-WMS'
+            })
+        };
+
+        L.control.layers(baseLayers).addTo(map);
+
+        map.addControl(drawControl);
+        map.on(L.Draw.Event.CREATED, function (e) {
+            var type = e.layerType,
+                layer = e.layer;
+            if (type === 'marker') {
+                // Do marker specific actions
+            }
+            var latlngs = layer.getLatLngs()
+            
+            intersectCheck(latlngs);
+            // Do whatever else you need to. (save to db; add to map etc)
+            editableLayers.addLayer(layer);
+            map.addLayer(layer);
+        });
+        map.on('draw:edited', function (e) {
+            var layers = e.layers;
+            layers.eachLayer(function (layer) {
+                //do whatever you want; most likely save back to db
+            });
+        });
+
+        var permisStyle = {
+            "color": "#000",
+            "weight": 5,
+            "opacity": 0.65
+        };
+        var indiceStyle = {
+            radius: 3,
+            fillColor: "#ff7800",
+            color: "#000",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
+        };
+
+        var moughataaStyle = {
+            radius: 5,
+            fillColor: "#ff1a1a",
+            color: "#000",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
+        };
+
+        var capitaleStyle = {
+            radius: 10,
+            fillColor: "#1f7a1f",
+            color: "#000",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
+        };
+
+        var communesStyle = {
+            radius: 3,
+            fillColor: "#ffff00",
+            color: "#000",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
+        };
+
+        var routeStyle = {
+            "color": "#663300",
+            "weight": 3,
+            "opacity": 0.65
+        };
+
+        var communeStyle = {
+            "color": "#999966",
+            "weight": 3,
+            "opacity": 0.65
+        };
+
+        var permis = new L.GeoJSON.AJAX(["data/Permis.geojson"], {
+            style: permisStyle,
+            onEachFeature: onEachPermis
+        }).addTo(map);
+        var indices = new L.GeoJSON.AJAX(["data/indices.geojson"], {
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, indiceStyle);
+            },
+            onEachFeature: onEachIndice
+        }).addTo(map);
+
+        var wilaya = new L.GeoJSON.AJAX(["data/Wilya.geojson"]).addTo(map);
+
+        var moughataa = new L.GeoJSON.AJAX(["data/Moughataa.geojson"], {
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, moughataaStyle);
+            },
+        }).addTo(map);
+
+        var capitales_regionales = new L.GeoJSON.AJAX(["data/capitales_regionales.geojson"], {
+            pointToLayer: function (feature, latlng) {
+                return L.circleMarker(latlng, capitaleStyle);
+            },
+        }).addTo(map);
+
+
+        var communes = new L.GeoJSON.AJAX(["data/communes.geojson"], {
+            style: communeStyle
+        }).addTo(map);
+
+        /*var limites_communes = new L.GeoJSON.AJAX(["data/limites_communes.geojson"],{
+            style: communeStyle
+        }).addTo(map);*/
+
+        var routes = new L.GeoJSON.AJAX(["data/routes.geojson"], {
+            style: routeStyle
+        }).addTo(map);
+
+        //permis layers data
+        function onEachPermis(feature, layer) {
+            // does this feature have a property named popupContent?
+            if (feature.properties && feature.properties.CODIGO) {
+                layer.bindPopup("CODIGO: "+feature.properties.CODIGO);
+            }
+        }
+        //permis layers data
+        function onEachIndice(feature, layer) {
+            // does this feature have a property named popupContent?
+            if (feature.properties && feature.properties.NOM) {
+                layer.bindPopup("NOM: "+feature.properties.NOM);
+            }
+        }
+/********************************************** filers******************************************************/
+
+        //filter indice
+        function filterIndices() {
+            var checkBox1 = document.getElementById("filter-indices");
+            // Get the output text
+
+            // If the checkbox is checked, display the output text
+            if (checkBox1.checked == true){
+                map.addLayer(indices)
+            } else {
+                map.removeLayer(indices)
+            }
+        }
+
+        //filter Pemis
+        function filterPermis() {
+            var checkBox = document.getElementById("filter-permis");
+            // Get the output text
+
+            // If the checkbox is checked, display the output text
+            if (checkBox.checked == true){
+                map.addLayer(permis)
+            } else {
+                map.removeLayer(permis) 
+            }
+        }
+
+        //filter wilaya
+        function filterWilaya() {
+            var checkBox2 = document.getElementById("filter-wilaya");
+            // Get the output text
+
+            // If the checkbox is checked, display the output text
+            if (checkBox2.checked == true){
+                map.addLayer(wilaya)
+            } else {
+                map.removeLayer(wilaya)
+            }
+        }
+
+        //filter Moughataa
+        function filterMoughataa() {
+            var checkBox2 = document.getElementById("filter-moughataa");
+            // Get the output text
+
+            // If the checkbox is checked, display the output text
+            if (checkBox2.checked == true){
+                map.addLayer(moughataa)
+            } else {
+                map.removeLayer(moughataa)
+            }
+        }
+
+        //filter Moughataa
+        function filterCapitalesRegionales() {
+            var checkBox2 = document.getElementById("filter-capitales-regionales");
+            // Get the output text
+
+            // If the checkbox is checked, display the output text
+            if (checkBox2.checked == true){
+                map.addLayer(capitales_regionales)
+            } else {
+                map.removeLayer(capitales_regionales)
+            }
+        }
+
+        //filter Communes
+        function filterCommunes() {
+            var checkBox2 = document.getElementById("filter-communes");
+            // Get the output text
+
+            // If the checkbox is checked, display the output text
+            if (checkBox2.checked == true){
+                map.addLayer(communes)
+            } else {
+                map.removeLayer(communes)
+            }
+        }
+
+        //filter Limite communes
+        function filterLimitesCommune() {
+            var checkBox2 = document.getElementById("filter-limites-commune");
+            // Get the output text
+
+            // If the checkbox is checked, display the output text
+            if (checkBox2.checked == true){
+                map.addLayer(limites_communes)
+            } else {
+                map.removeLayer(limites_communes)
+            }
+        }
+
+        //filter Routes
+        function filterRoutes() {
+            var checkBox2 = document.getElementById("filter-routes");
+            // Get the output text
+
+            // If the checkbox is checked, display the output text
+            if (checkBox2.checked == true){
+                map.addLayer(routes)
+            } else {
+                map.removeLayer(routes)
+            }
+        }
+
+
+/********************************************** End Filers******************************************************/
+
+        //Check intersections between the drawn and the values.
+        function intersectCheck(latlngs){
+            var countIndices  = 0;
+            var countPermis  = 0;
+
+            var promise = $.getJSON("data/indices.geojson");
+            promise.then(function(data) {
+                data.features.forEach((element) => {
+                    if(element.geometry && element.geometry.coordinates){
+                        if (inside(element.geometry.coordinates, latlngs)){
+                            indicesIn.push(element);
+                            countIndices++;
+                        }
+                    }
+                    
+                })
+                var text = document.getElementById("tindice");
+                text.innerHTML = countIndices;
+                
+                modal.style.display = "block";
+            });
+
+            /*var promise1 = $.getJSON("data/indices.geojson");
+            promise1.then(function(data) {
+                data.features.forEach((element) => {
+                    if(element.geometry && element.geometry.coordinates){
+                        if (inside(element.geometry.coordinates, latlngs)){
+                            indicesIn.push(element);
+                            countIndices++;
+                        }
+                    }
+                    
+                })
+                var text = document.getElementById("tindice");
+                text.innerHTML = countIndices;
+                
+                modal.style.display = "block";
+            });*/
+
+        }
+
+        function inside(point, vs) {
+            // ray-casting algorithm based on
+            // http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+            
+            var x = point[1], y = point[0];
+
+            var inside = false;
+            for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+                var xi = vs[i].lat, yi = vs[i].lng;
+                var xj = vs[j].lat, yj = vs[j].lng;
+
+                var intersect = ((yi > y) != (yj > y))
+                    && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+                if (intersect) inside = !inside;
+            }
+
+            return inside;
+        };
+
+        function insidePolyone(pooly, vs) {
+            
+        };
+
+        function showIndices() {
+            var text = document.getElementById("indices-list");
+            text.innerHTML = Object.keys(indicesIn).map(function(k){return indicesIn[k].properties.NOM}).join("<br/>");
+            modalindices.style.display = "block";
+        };
+        /*var promise = $.getJSON("data/indices.geojson");
+        promise.then(function(data) {
+            var allbusinesses = L.geoJson(data);
+                    var cafes = L.geoJson(data, {
+                filter: function(feature, layer) {
+                    return feature.properties.BusType == "Cafe";
+                },
+                pointToLayer: function(feature, latlng) {
+                    return L.marker(latlng, {
+                        icon: cafeIcon
+                    }).on('mouseover', function() {
+                        this.bindPopup(feature.properties.Name).openPopup();
+                    });
+                }
+            });
+            var others = L.geoJson(data, {
+                filter: function(feature, layer) {
+                    return feature.properties.BusType != "Cafe";
+                },
+                pointToLayer: function(feature, latlng) {
+                    return L.marker(latlng, {
+                    }).on('mouseover', function() {
+                        this.bindPopup(feature.properties.Name).openPopup();
+                    });
+                }
+            });
+            map.fitBounds(allbusinesses.getBounds(), {
+                padding: [50, 50]
+            });
+            //allbusinesses.addTo(map)
+            cafes.addTo(map)
+            others.addTo(map)
+            // The JavaScript below is new
+            $("#others").click(function() {
+                map.addLayer(others)
+                map.removeLayer(cafes)
+            });
+            $("#cafes").click(function() {
+                map.addLayer(cafes)
+                map.removeLayer(others)
+            });
+            $("#allbus").click(function() {
+                map.addLayer(cafes)
+                map.addLayer(others)
+            });
+        });
+        var geojsonFeature = {
+            "type": "Feature",
+            "properties": {
+                "name": "Coors Field",
+                "amenity": "Baseball Stadium",
+                "popupContent": "This is where the Rockies play!"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [-104.99404, 39.75621]
+            }
+        };
+        //L.geoJSON(geojsonFeature).addTo(map);
+        var myStyle = {
+            "color": "#ff7800",
+            "weight": 5,
+            "opacity": 0.65
+        };
+        
+        L.geoJSON("data/Permis.geojson", {
+            style: myStyle
+        }).addTo(map);
+        var promise = $.getJSON("data/Permis.geojson");
+        promise.then(function(data) {
+            var all = L.geoJson(data);
+                    var cafes = L.geoJson(data, {
+                filter: function(feature, layer) {
+                    return feature.properties.BusType == "Cafe";
+                },
+                pointToLayer: function(feature, latlng) {
+                    return L.marker(latlng, {
+                        icon: cafeIcon
+                    }).on('mouseover', function() {
+                        this.bindPopup(feature.properties.Name).openPopup();
+                    });
+                }
+            });
+            var others = L.geoJson(data, {
+                filter: function(feature, layer) {
+                    return feature.properties.BusType != "Cafe";
+                },
+                pointToLayer: function(feature, latlng) {
+                    return L.marker(latlng, {
+                    }).on('mouseover', function() {
+                        this.bindPopup(feature.properties.Name).openPopup();
+                    });
+                }
+            });
+            map.fitBounds(all.getBounds(), {
+                padding: [50, 50]
+            });
+            all.addTo(map)
+            cafes.addTo(map)
+            others.addTo(map)
+            // The JavaScript below is new
+            $("#others").click(function() {
+                map.addLayer(others)
+                map.removeLayer(cafes)
+            });
+            $("#cafes").click(function() {
+                map.addLayer(cafes)
+                map.removeLayer(others)
+            });
+            $("#allbus").click(function() {
+                map.addLayer(cafes)
+                map.addLayer(others)
+            });
+        });
+        // Initialise the FeatureGroup to store editable layers
+        var editableLayers = new L.FeatureGroup();
+        map.addLayer(editableLayers);
+
+        var drawPluginOptions = {
+        position: 'topright',
+        draw: {
+            polygon: {
+            allowIntersection: false, // Restricts shapes to simple polygons
+            drawError: {
+                color: '#e1e100', // Color the shape will turn when intersects
+                message: '<strong>Oh snap!<strong> you can\'t draw that!' // Message that will show when intersect
+            },
+            shapeOptions: {
+                color: '#97009c'
+            }
+            },
+            // disable toolbar item by setting it to false
+            polyline: false,
+            circle: false, // Turns off this drawing tool
+            rectangle: false,
+            marker: false,
+            },
+        edit: {
+            featureGroup: editableLayers, //REQUIRED!!
+            remove: false
+        }
+        };
+
+        // Initialise the draw control and pass it the FeatureGroup of editable layers
+        var drawControl = new L.Control.Draw(drawPluginOptions);
+        map.addControl(drawControl);
+
+        var editableLayers = new L.FeatureGroup();
+        map.addLayer(editableLayers);
+
+        map.on('draw:created', function(e) {
+        var type = e.layerType,
+            layer = e.layer;
+
+        if (type === 'marker') {
+            layer.bindPopup('A popup!');
+        }
+
+        editableLayers.addLayer(layer);
+        });*/
+    </script>
+</body>
+
+</html>
